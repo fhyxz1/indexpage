@@ -6,7 +6,7 @@ import Home from '../views/home.vue'
 import blog from '../views/blog.vue'
 import test from '../test/testimg.vue'
 import systemRoutes from '../system/router'
-
+import user from '../components/usercenter.vue'
 const routes = [
   {
     path: '/',
@@ -35,6 +35,12 @@ const routes = [
         path: '/test',
         name: 'test',
         component: test,
+        meta: { title: '测试' }
+      },
+      {
+        path: '/user',
+        name: 'user',
+        component: user,
         meta: { title: '测试' }
       },
     ]

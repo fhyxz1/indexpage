@@ -95,7 +95,7 @@ const menuItems = computed(() => {
       {
           label: '个人中心',
           icon: 'User',
-          path: '/user/profile'
+          path: '/user'
       },
       {
           label: '我的收藏',
@@ -105,7 +105,7 @@ const menuItems = computed(() => {
       {
           label: '消息中心',
           icon: 'Message',
-          path: '/user/messages'
+          path: '/user/message'
       }
   ]
 
