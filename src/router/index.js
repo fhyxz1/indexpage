@@ -4,7 +4,7 @@ import layout from '../views/layout.vue'
 import login from '../views/login.vue'
 import Home from '../views/home.vue'
 import blog from '../views/blog.vue'
-import test from '../test/testimg.vue'
+import test from '../views/test.vue'
 import systemRoutes from '../system/router'
 import user from '../components/usercenter.vue'
 const routes = [
@@ -32,12 +32,6 @@ const routes = [
         meta: { title: '博客' }
       },
       {
-        path: '/test',
-        name: 'test',
-        component: test,
-        meta: { title: '测试' }
-      },
-      {
         path: '/user',
         name: 'user',
         component: user,
@@ -50,6 +44,12 @@ const routes = [
     name: 'index',
     component: index,
     meta: { title: '首页' }
+  },
+  {
+    path: '/test',
+    name: 'test',
+    component: test,
+    meta: { title: '测试' }
   },
   // 集成后台管理路由
   ...systemRoutes
