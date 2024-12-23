@@ -25,7 +25,7 @@
 
     <!-- 博客文章数据展示 -->
     <div v-else>
-      <div v-for="article in blogArticles" :key="article.id" class="blog-card">
+      <div v-for="article in articles" :key="article.id" class="blog-card">
         <img :src="article.image" alt="Article Image" class="blog-image" />
         <div class="blog-text">
           <h3 class="blog-title">{{ article.title }}</h3>
@@ -37,67 +37,64 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from "vue";
+<script setup lang="ts">
+  import { ref, onMounted, watch } from 'vue';
 import CategorySelector from '../common/CategorySelector.vue';
 
-// 分类数据
-const selectedCategory = ref({name: '全部文章', subCategories: []});
-const categories = ref([
-  { name: '全部文章', subCategories: [] },
-  { name: 'Web开发', subCategories: ['Vue.js', 'React', 'Node.js'] },
-  { name: '移动端开发', subCategories: ['Flutter', 'React Native', 'Swift'] },
-  { name: '数据分析', subCategories: ['Service Workers', 'Web App Manifest', 'Caching Strategies'] },
-  { name: '机器学习', subCategories: ['TensorFlow', 'PyTorch', 'Scikit-Learn'] },
-  { name: '数据结构与算法', subCategories: ['AWS', 'Azure', 'Google Cloud'] },
-]);
-
-// 模拟博客文章数据
-const allBlogArticles = ref([
-  {
-    id: 1,
-    image: "https://via.placeholder.com/150",
-    title: "Exploring Vue 3",
-    summary: "Learn the basics of Vue 3 and its powerful composition API.",
-    author: "John Doe",
-    category: 'Web开发'
-  },
-  {
-    id: 2,
-    image: "https://via.placeholder.com/150",
-    title: "Mastering Vant UI",
-    summary: "Create stunning mobile interfaces with Vant UI components.",
-    author: "Jane Smith",
-    category: '移动端开发'
-  },
-  {
-    id: 3,
-    image: "https://via.placeholder.com/150",
-    title: "Building Progressive Web Apps",
-    summary: "Dive into the world of PWAs and enhance user experiences.",
-    author: "Alice Johnson",
-    category: 'Progressive Web Apps'
-  },
-]);
-
-const isLoading = ref(true);
-
-// 根据选择的分类过滤文章
-const blogArticles = computed(() => {
-  if (selectedCategory.value.name === '全部文章') {
-    return allBlogArticles.value;
+interface Category {
+    name: string;
+    subCategories: string[];
   }
-  return allBlogArticles.value.filter(article => 
-    article.category === selectedCategory.value.name
-  );
-});
-
-onMounted(() => {
-  // 模拟数据请求延迟
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1000);
-});
+  
+  interface Article {
+    id: number;
+    image: string;
+    title: string;
+    summary: string;
+    author: string;
+    category: string;
+    subCategory: string;
+  }
+  
+  // 接收父组件传递的数据
+  const props = defineProps({
+    categories: {
+      type: Array as () => Category[],
+      required: true,
+    },
+    articles: {
+      type: Array as () => Article[],
+      required: true,
+    },
+    isLoading: {
+      type: Boolean,
+      required: true,
+    },
+  });
+  
+  const selectedCategory = ref<Category>({ name: '全部文章', subCategories: [] });
+  const filteredArticles = ref<Article[]>(props.articles);
+  
+  watch(() => props.articles, (newArticles) => {
+    filteredArticles.value = newArticles;
+  });
+  
+  onMounted(() => {
+    filteredArticles.value = props.articles;
+  });
+  
+  const filterArticles = () => {
+    filteredArticles.value = props.articles.filter((article) => {
+      return !selectedCategory.value.name || 
+             selectedCategory.value.name === '全部文章' || 
+             article.category === selectedCategory.value.name;
+    });
+  };
+  
+  const selectCategory = (category: Category) => {
+    selectedCategory.value = category;
+    filterArticles();
+  };
 </script>
 
 <style scoped>

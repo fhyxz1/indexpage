@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import index from '../views/index.vue'
 import layout from '../views/layout.vue'
-import login from '../views/login.vue'
+import login from '../views/dl.vue'
 import Home from '../views/home.vue'
 import blog from '../views/blog.vue'
-import test from '../views/test.vue'
+import test from '../test/testimg.vue'
 import systemRoutes from '../system/router'
 import user from '../components/usercenter.vue'
 const routes = [
@@ -36,6 +36,18 @@ const routes = [
         name: 'user',
         component: user,
         meta: { title: '测试' }
+      },
+      {
+        path: '/message',
+        name: 'message',
+        component: () => import('../components/message.vue'),
+        meta: { title: '测试' }
+      },
+      {
+        path: '/favorite',
+        name: 'favorite',
+        component: () => import('../components/favorite.vue'),
+        meta: { title: '收藏测试' }
       },
     ]
   },

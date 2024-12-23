@@ -87,9 +87,29 @@ import {
     const textRef = ref(null);
     const searchtext=ref('');
     // 用户角色状态
-const userRole = ref('admin') // 可能的值: 'user', 'blogger', 'admin'
+const userRole = ref('admin') // 可能的值: 'user', 'admin'
 
 const menuItems = computed(() => {
+    // 游客菜单项
+    const visitorItems = [
+        {
+            label: '登录/注册',
+            icon: 'User',
+            path: '/login',
+            divided: false
+        },
+        {
+            label: '浏览历史',
+            icon: 'Document',
+            path: '/history'
+        },
+        {
+            label: '帮助中心',
+            icon: 'Message',
+            path: '/help',
+            divided: true
+        }
+    ]
     // 基础菜单项（所有用户可见）
     const baseItems = [
         {
@@ -134,6 +154,11 @@ const menuItems = computed(() => {
         }
     ]
 
+    // 根据用户角色返回不同菜单项
+    if (userRole.value === 'visitor') {
+        return visitorItems
+    }
+
     let items = [...baseItems]
 
     if (userRole.value === 'blogger' || userRole.value === 'admin') {
@@ -144,7 +169,6 @@ const menuItems = computed(() => {
         items = [...items, ...adminItems]
     }
 
-    // 添加退出登录选项
     items.push({
         label: '退出登录',
         icon: 'SwitchButton',

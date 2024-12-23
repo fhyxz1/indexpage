@@ -35,17 +35,21 @@
           <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
       </div>
       <template #dropdown>
-          <el-dropdown-menu>
-              <template v-for="(item, index) in menuItems" :key="index">
-                  <el-dropdown-item 
-                      :divided="item.divided"
-                      @click="item.action ? item.action() : handlerouter(item.path)"
-                  >
-                      <el-icon><component :is="item.icon" /></el-icon>
-                      {{ item.label }}
-                  </el-dropdown-item>
-              </template>
-          </el-dropdown-menu>
+        <el-dropdown-menu>
+          <!-- 添加游客提示信息 -->
+          <div v-if="userRole === 'visitor'" class="visitor-tip">
+            游客，请登录!
+          </div>
+          <template v-for="(item, index) in menuItems" :key="index">
+            <el-dropdown-item 
+              :divided="item.divided"
+              @click="item.action ? item.action() : handlerouter(item.path)"
+            >
+              <el-icon><component :is="item.icon" /></el-icon>
+              {{ item.label }}
+            </el-dropdown-item>
+          </template>
+        </el-dropdown-menu>
       </template>
   </el-dropdown>
 </div>
@@ -90,23 +94,33 @@ import {
 const userRole = ref('admin') // 可能的值: 'user', 'blogger', 'admin'
 
 const menuItems = computed(() => {
-  // 基础菜单项（所有用户可见）
+  // 游客菜单项
+  const visitorItems = [
+    {
+      label: '登录',
+      icon: 'SwitchButton',
+      path: '/login',
+      divided: true
+    }
+  ]
+
+  // 基础菜单项（登录用户可见）
   const baseItems = [
-      {
-          label: '个人中心',
-          icon: 'User',
-          path: '/user'
-      },
-      {
-          label: '我的收藏',
-          icon: 'Star',
-          path: '/user/favorites'
-      },
-      {
-          label: '消息中心',
-          icon: 'Message',
-          path: '/user/message'
-      }
+    {
+      label: '个人中心',
+      icon: 'User',
+      path: '/user'
+    },
+    {
+      label: '我的收藏',
+      icon: 'Star',
+      path: '/favorite'
+    },
+    {
+      label: '消息中心',
+      icon: 'Message',
+      path: '/message'
+    }
   ]
 
   // 博主和管理员可见的菜单项
@@ -133,25 +147,31 @@ const menuItems = computed(() => {
           divided: true
       }
   ]
-
-  let items = [...baseItems]
-
-  if (userRole.value === 'blogger' || userRole.value === 'admin') {
+  let items = []
+  
+  // 根据用户角色返回对应菜单项
+  if (userRole.value === 'visitor') {
+    items = [...visitorItems]
+  } else {
+    items = [...baseItems]
+    
+    if (userRole.value === 'blogger' || userRole.value === 'admin') {
       items = [...items, ...bloggerItems]
-  }
+    }
 
-  if (userRole.value === 'admin') {
+    if (userRole.value === 'admin') {
       items = [...items, ...adminItems]
-  }
+    }
 
-  // 添加退出登录选项
-  items.push({
+    // 只给已登录用户添加退出登录选项
+    items.push({
       label: '退出登录',
       icon: 'SwitchButton',
       path: '/login',
       divided: true,
       action: handleLogout
-  })
+    })
+  }
 
   return items
 })
@@ -271,7 +291,7 @@ const menuItems = computed(() => {
       margin-left: 40px;
     }
     
-    /* 针对 700px 到 900px 屏幕宽度的样式 */
+    /* 对 700px 到 900px 屏幕宽度的样式 */
     @media (min-width: 700px) and (max-width: 900px) {
       .artistic-text {
         font-size: 1.5em;  /* 修改字体大小 */
@@ -318,6 +338,27 @@ const menuItems = computed(() => {
       transform: translateZ(0);
       transition: var(--el-transition-box-shadow);
       width: 250px;
+  }
+
+  /* 修改游客提示样式 */
+  .visitor-tip {
+    padding: 8px 16px;
+    color: #409EFF;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 1px solid #EBEEF5;
+    background-color: #ecf5ff;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  /* 限制下拉菜单项的最大宽度 */
+  .el-dropdown-item {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
     </style>
     

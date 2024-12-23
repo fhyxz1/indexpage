@@ -60,12 +60,13 @@
       <el-upload
         class="upload-container"
         drag
-        action="localhost:8080/api/images/upload"  
+        action="http://localhost:8080/api/images/upload"  
         :auto-upload="true"
         :show-file-list="true"
         :on-success="handleUploadSuccess"
         :on-error="handleUploadError"
         :before-upload="beforeUpload"
+        withCredentials:true
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
@@ -165,19 +166,31 @@ const editorConfig = {
 
 // 处理图片上传
 const handleUploadSuccess = (response) => {
-  // 这里的 response 结构根据实际接口返回调整
-  const url = response.data.url
-  // 调用 insertFn 将图片插入到编辑器
+  // if (!response.data) {
+  //   ElMessage.error('上传响应数据无效')
+  //   return
+  // }
+  
+  // 直接拼接完整的URL
+  const baseUrl = 'http://localhost:8080'
+  const img=response.url
+  const imageUrl = `${baseUrl}${img}` 
+  
   if (currentInsertFn.value) {
-    currentInsertFn.value(url)
+    // 将完整URL传入编辑器
+    currentInsertFn.value(imageUrl, '图片', imageUrl)
     currentInsertFn.value = null
+    uploadDialogVisible.value = false
+    ElMessage.success('图片上传成功')
+    console.log('插入的图片URL:', imageUrl) // 添加日志便于调试
+  } else {
+    ElMessage.error('图片插入函数未找到')
   }
-  uploadDialogVisible.value = false
-  ElMessage.success('图片上传成功')
 }
 
 const handleUploadError = () => {
   ElMessage.error('图片上传失败')
+  console.log('图片上传失败'+error)
 }
 
 const beforeUpload = (file) => {

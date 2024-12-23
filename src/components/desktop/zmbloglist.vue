@@ -35,90 +35,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { ElCard, ElRow, ElCol, ElSkeleton } from 'element-plus';
+import { ref, onMounted, watch } from 'vue';
 import CategorySelector from '../common/CategorySelector.vue';
 
 interface Category {
-  name: string;
-  subCategories: string[];
-}
-
-interface Article {
-  id: number;
-  image: string;
-  title: string;
-  summary: string;
-  author: string;
-  category: string;
-  subCategory: string;
-}
-
-const blogArticles = ref<Article[]>([]);
-const isLoading = ref(true);
-const selectedCategory = ref<Category>({name: '全部文章', subCategories: []});
-const categories = ref<Category[]>([
-  { name: '全部文章', subCategories: [] },
-  { name: 'Web开发', subCategories: ['Vue.js', 'React', 'Node.js'] },
-  { name: '移动端开发', subCategories: ['Flutter', 'React Native', 'Swift'] },
-  { name: 'Progressive Web Apps', subCategories: ['Service Workers', 'Web App Manifest', 'Caching Strategies'] },
-  { name: '机器学习', subCategories: ['TensorFlow', 'PyTorch', 'Scikit-Learn'] },
-  { name: 'Cloud Computing', subCategories: ['AWS', 'Azure', 'Google Cloud'] },
-  { name: 'Blockchain', subCategories: ['Ethereum', 'Solana', 'Bitcoin'] },
-  { name: '数据结构与算法', subCategories: ['Sorting', 'Graph Theory', 'Dynamic Programming'] },
-  { name: '数据分析', subCategories: ['SQL', 'Python', 'R'] },
-]);
-
-const filteredArticles = ref<Article[]>([]);
-
-onMounted(() => {
-  setTimeout(() => {
-    blogArticles.value = [
-      {
-        id: 1,
-        image: 'https://via.placeholder.com/300x200',
-        title: 'Exploring Vue 3',
-        summary: 'Learn the basics of Vue 3 and its powerful composition API.',
-        author: 'John Doe',
-        category: 'Web开发',
-        subCategory: 'Vue.js',
-      },
-      {
-        id: 2,
-        image: 'https://via.placeholder.com/300x200',
-        title: 'Mastering Vant UI',
-        summary: 'Create stunning mobile interfaces with Vant UI components.',
-        author: 'Jane Smith',
-        category: '移动端开发',
-        subCategory: 'Flutter',
-      },
-      {
-        id: 3,
-        image: 'https://via.placeholder.com/300x200',
-        title: 'Building Progressive Web Apps',
-        summary: 'Dive into the world of PWAs and enhance user experiences.',
-        author: 'Alice Johnson',
-        category: 'Progressive Web Apps',
-        subCategory: 'Service Workers',
-      },
-    ];
-    isLoading.value = false;
-    filteredArticles.value = blogArticles.value;
-  }, 2000);
-});
-
-const filterArticles = () => {
-  filteredArticles.value = blogArticles.value.filter((article) => {
-    return !selectedCategory.value.name || 
-           selectedCategory.value.name === '全部文章' || 
-           article.category === selectedCategory.value.name;
+    name: string;
+    subCategories: string[];
+  }
+  
+  interface Article {
+    id: number;
+    image: string;
+    title: string;
+    summary: string;
+    author: string;
+    category: string;
+    subCategory: string;
+  }
+  
+  // 接收父组件传递的数据
+  const props = defineProps({
+    categories: {
+      type: Array as () => Category[],
+      required: true,
+    },
+    articles: {
+      type: Array as () => Article[],
+      required: true,
+    },
+    isLoading: {
+      type: Boolean,
+      required: true,
+    },
   });
-};
-
-const selectCategory = (category: Category) => {
-  selectedCategory.value = category;
-  filterArticles();
-};
+  
+  const selectedCategory = ref<Category>({ name: '全部文章', subCategories: [] });
+  const filteredArticles = ref<Article[]>(props.articles);
+  
+  watch(() => props.articles, (newArticles) => {
+    filteredArticles.value = newArticles;
+  });
+  
+  onMounted(() => {
+    filteredArticles.value = props.articles;
+  });
+  
+  const filterArticles = () => {
+    filteredArticles.value = props.articles.filter((article) => {
+      return !selectedCategory.value.name || 
+             selectedCategory.value.name === '全部文章' || 
+             article.category === selectedCategory.value.name;
+    });
+  };
+  
+  const selectCategory = (category: Category) => {
+    selectedCategory.value = category;
+    filterArticles();
+  };
 </script>
 
 <style scoped>

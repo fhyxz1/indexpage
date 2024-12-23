@@ -285,9 +285,7 @@
   </script>
   
   <style scoped>
-.main-content {
-    background: linear-gradient(to right, blue, cyan);
-  }
+
   .van-popup {
     padding: 0;
   }
