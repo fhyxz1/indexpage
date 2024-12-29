@@ -74,6 +74,7 @@
             ref="registerFormRef"
             :model="registerForm"
             :rules="registerRules"
+            @submit.prevent="handleRegister"
             class="form"
           >
             <el-form-item prop="username">
@@ -111,8 +112,14 @@
                 </div>
               </div>
             </el-form-item>
-            <el-button type="primary" class="submit-btn" @click="handleRegister">
-              注册
+            <el-button 
+              type="primary" 
+              class="submit-btn" 
+              native-type="submit"
+              :loading="loading"
+              :disabled="loading"
+            >
+              {{ loading ? '注册中...' : '注册' }}
             </el-button>
           </el-form>
         </div>
@@ -726,7 +733,7 @@
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  image-rendering: -webkit-optimize-contrast; /* 提高图片��晰度 */
+  image-rendering: -webkit-optimize-contrast; /* 提高图片清晰度 */
 }
 
 /* 深色模式适配 */
@@ -945,14 +952,17 @@ const handleLogin = async () => {
     }
   })
 }
+
+// 添加加载状态
+const loading = ref(false)
+
 // 注册处理
 const handleRegister = async () => {
   if (!registerFormRef.value) return
   await registerFormRef.value.validate(async (valid) => {
     if (valid) {
+      loading.value = true // 开始加载
       try {
-        // 模拟注册成功
-        // 你可以通过 uncomment 后面的代码启用真正的注册逻辑
         const res = await axios.post('http://localhost:8080/api/users/register', {
           username: registerForm.username,
           email: registerForm.email,
@@ -961,18 +971,38 @@ const handleRegister = async () => {
           captchaKey: captchaKey.value
         })
 
-        // 判断注册结果
-        if (res.data.code === 200) {
-          ElMessage.success('注册成功')
-          // 注册成功后可以进行跳转到登录页面，或者其他后续操作
-        } else {
-          ElMessage.error(res.data.message || '注册失败')
-          refreshCaptcha()  // 刷新验证码
-        }
+        // 注册成功
+        ElMessage.success('注册成功')
+        // 切换到登录模式
+        switchMode(false)
+        // 清空注册表单
+        registerFormRef.value.resetFields()
+        // 刷新验证码
+        refreshCaptcha()
+
       } catch (error) {
-        console.error(error)
-        ElMessage.error('注册请求失败')
-        refreshCaptcha() // 刷新验证码
+        // 处理具体的错误情况
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              ElMessage.error(error.response.data.message || '请求参数错误')
+              break
+            case 409:
+              ElMessage.error('用户名或邮箱已存在')
+              break
+            case 422:
+              ElMessage.error('验证码错误')
+              break
+            default:
+              ElMessage.error('注册失败，请稍后重试')
+          }
+        } else {
+          ElMessage.error('网络错误，请检查网络连接')
+        }
+        console.error('注册错误:', error)
+        refreshCaptcha()
+      } finally {
+        loading.value = false // 结束加载
       }
     }
   })

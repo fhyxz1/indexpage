@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import router from '../router';
 
 interface UserInfo {
   userid?: string;
@@ -20,27 +22,39 @@ export const useUserStore = defineStore('user', {
   
   actions: {
     async checkAuth() {
-      if (!this.token) return false
+      if (!this.token) {
+        ElMessage.error('未登录或登录已过期')
+        return false
+      }
 
       try {
-        // 修改请求头名称为 satoken
         axios.defaults.headers.common['satoken'] = this.token
-        
-        // 验证 token
         const res = await axios.get('http://localhost:8080/api/users/info')
         const { role, fullname, username, userid } = res.data
         
         this.setUserInfo({
           userid,
           username,
-          role: typeof role === 'string' ? role.toLowerCase() : 'visitor', // 添加类型检查
+          role: typeof role === 'string' ? role.toLowerCase() : 'visitor',
           fullname
         })
 
         return true
-      } catch (error) {
-        console.error('Token验证失败:', error)
+      } catch (error: any) {
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            ElMessage.error('登录已过期，请重新登录')
+          } else if (error.response?.status === 403) {
+            ElMessage.error('没有访问权限')
+          } else {
+            ElMessage.error('验证失败：' + (error.response?.data?.message || '未知错误'))
+          }
+        } else {
+          ElMessage.error('服务器错误，请稍后重试')
+        }
+        
         this.clearUserInfo()
+        router.push('/login')
         return false
       }
     },
@@ -51,14 +65,12 @@ export const useUserStore = defineStore('user', {
       this.userRole = user.role || 'visitor'
       
       if (this.token) {
-        // 这里也需要修改
         axios.defaults.headers.common['satoken'] = this.token
       }
     },
     
     setToken(token: string) {
       this.token = token
-      // 这里也需要修改
       axios.defaults.headers.common['satoken'] = token
     },
     
@@ -66,8 +78,10 @@ export const useUserStore = defineStore('user', {
       this.token = ''
       this.userInfo = {}
       this.userRole = 'visitor'
-      // 这里也需要修改
       delete axios.defaults.headers.common['satoken']
+      
+      localStorage.removeItem('lastLoginTime')
+      sessionStorage.clear()
     }
   },
 

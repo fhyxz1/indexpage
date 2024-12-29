@@ -41,10 +41,10 @@
           <div class="login-section">
             <div class="welcome-text">
               <van-icon name="user-o" size="24" />
-              <p class="title">欢迎来到 ylab</p>
-              <p class="subtitle">登录后体验更多功能</p>
+              <p class="title">{{ loginSection.title }}</p>
+              <p class="subtitle">{{ loginSection.subtitle }}</p>
             </div>
-            <div class="auth-buttons">
+            <div class="auth-buttons" v-if="loginSection.showAuthButtons">
               <van-button 
                 type="primary" 
                 size="small"
@@ -97,11 +97,13 @@
   
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <div class="role-switcher">
-            <span class="role-label">当前角色：</span>
-            <van-dropdown-menu>
-              <van-dropdown-item v-model="userRole" :options="roleOptions" />
-            </van-dropdown-menu>
+          <div class="user-avatar">
+            <van-image
+              round
+              width="50"
+              height="50"
+              :src="userStore.userInfo?.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'"
+            />
           </div>
           <div class="logout-button" @click="confirmLogout" v-if="userRole !== 'guest'">
             <van-icon name="logout" class="logout-icon"/>
@@ -127,23 +129,17 @@
   import { ref, computed } from 'vue';
   import { showDialog } from 'vant';
   import { ElMessage } from 'element-plus'
+  import { useUserStore } from '@/stores/user'
+  import { storeToRefs } from 'pinia'
+
   const router = useRouter();
+  const userStore = useUserStore()
+  const { userRole } = storeToRefs(userStore)
   const isSearchVisible = ref(false);  
   const isMenuVisible = ref(false);    
   const searchtext=ref('');
   const currentPath = ref(window.location.pathname);
   
-  // 用户角色选项
-  const roleOptions = [
-    { text: '访客', value: 'guest' },
-    { text: '用户', value: 'user' },
-    { text: '博主', value: 'blogger' },
-    { text: '管理员', value: 'admin' }
-  ];
-
-  // 用户角色状态
-  const userRole = ref('guest'); // 可能的值: 'guest', 'user', 'blogger', 'admin'
-
   // 基础导航菜单
   const menuItems = [
     { label: '首页', value: '/home', icon: 'home-o' },
@@ -158,17 +154,17 @@
       {
         label: '个人中心',
         icon: 'User',
-        path: '/user/profile'
+        path: '/user'
       },
       {
         label: '我的收藏',
         icon: 'Star',
-        path: '/user/favorites'
+        path: '/favorite'
       },
       {
         label: '消息中心',
         icon: 'Message',
-        path: '/user/messages'
+        path: '/message'
       }
     ];
 
@@ -256,10 +252,10 @@
     isMenuVisible.value = false;
   };
   const handleLogout = () => {
-    ElMessage.success('退出成功');
-    userRole.value = 'guest';
-    router.push('/login');
-    isMenuVisible.value = false;
+    userStore.clearUserInfo()
+    ElMessage.success('退出成功')
+    router.push('/login')
+    isMenuVisible.value = false
   };
   const confirmLogout = () => {
     showDialog({
@@ -277,11 +273,29 @@
       });
   };
   const handleLogin = () => {
-    console.log('登录');
+    router.push('/login')
+    isMenuVisible.value = false
   };
   const handleRegister = () => {
-    console.log('注册');
+    router.push('/register')
+    isMenuVisible.value = false
   };
+
+  // 添加 loginSection 计算属性
+  const loginSection = computed(() => {
+    if (!userStore.token || userRole.value === 'visitor') {
+      return {
+        title: '欢迎来到 ylab',
+        subtitle: '登录后体验更多功能',
+        showAuthButtons: true
+      }
+    }
+    return {
+      title: userStore.userInfo?.nickname || '用户',
+      subtitle: '欢迎回来',
+      showAuthButtons: false
+    }
+  })
   </script>
   
   <style scoped>
@@ -495,38 +509,15 @@
     margin-top: auto;
     padding: 16px;
     border-top: 1px solid var(--van-gray-2);
-  }
-
-  .role-switcher {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    padding: 8px 16px;
-    background: var(--van-background);
-    border-radius: 8px;
-    margin-bottom: 12px;
   }
 
-  .role-label {
-    font-size: 14px;
-    color: var(--van-gray-6);
-    margin-right: 8px;
-  }
-
-  :deep(.van-dropdown-menu) {
-    flex: 1;
-    height: 32px;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  :deep(.van-dropdown-menu__bar) {
-    height: 32px;
-    background: transparent;
-  }
-
-  :deep(.van-dropdown-menu__title) {
-    font-size: 14px;
-    color: var(--van-primary-color);
+  .user-avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
   }
 
   .logout-button {
