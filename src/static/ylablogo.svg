@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" data-name="图层 1" xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 400 300"
+     preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 8px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke: #ffffff;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-3 {
+        font-size: 60px;
+        fill: #ffffff;
+      }
+
+      .cls-3, .cls-4, .cls-5 {
+        font-family: MicrosoftYaHeiLight, 'Microsoft YaHei';
+      }
+
+      .cls-4 {
+        font-size: 85px;
+        fill: #ffffff;
+      }
+
+      .cls-5 {
+        font-size: 100px;
+        fill: #ffffff;
+      }
+
+      .cls-2 {
+        stroke-width: 6px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M60,270c-25,0-45-20-45-45V70c0-25,20-45,45-45h280c25,0,45,20,45,45v155c0,25-20,45-45,45H160"/>
+  <path class="cls-1" d="M90,270H60"/>
+  <text class="cls-5" transform="translate(65 200)"><tspan x="0" y="0">B</tspan></text>
+  <g>
+    <rect class="cls-2" x="160" y="100" width="12" height="90"/>
+    <polygon class="cls-2" points="166 70 160 100 172 100 166 70"/>
+  </g>
+  <text class="cls-3" transform="translate(190 200) scale(1.12 1)"><tspan x="0" y="0">O</tspan></text>
+  <text class="cls-4" transform="translate(270 200) scale(1.09 1)"><tspan x="0" y="0">g</tspan></text>
+  <line class="cls-1" x1="15" y1="70" x2="385" y2="70"/>
+  <line class="cls-1" x1="70" y1="230" x2="340" y2="245"/>
+  <line class="cls-1" x1="60" y1="25" x2="35" y2="70"/>
+  <line class="cls-1" x1="340" y1="25" x2="360" y2="70"/>
+</svg>

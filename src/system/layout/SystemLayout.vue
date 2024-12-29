@@ -4,7 +4,7 @@
       <!-- 侧边栏 -->
       <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
         <div class="logo-container">
-          <img src="" alt="Logo" class="logo" />
+          <img src="../../static/ylablogo.svg" alt="Logo" class="logo" />
           <span v-show="!isCollapse">博客后台系统</span>
         </div>
         
