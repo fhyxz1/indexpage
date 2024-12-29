@@ -37,11 +37,12 @@
       <template #dropdown>
         <el-dropdown-menu>
           <!-- 添加游客提示信息 -->
-          <div v-if="userRole === 'visitor'" class="visitor-tip">
+          <div v-if="!userStore.token || userRole === 'visitor'" class="visitor-tip">
             游客，请登录!
           </div>
           <template v-for="(item, index) in menuItems" :key="index">
             <el-dropdown-item 
+            style="display: flex;align-items: center;justify-content: center;"
               :divided="item.divided"
               @click="item.action ? item.action() : handlerouter(item.path)"
             >
@@ -88,82 +89,80 @@ import {
   import { ElMessage } from 'element-plus'
   import boxnu from '../module/menubox.vue';
   import router from '../../router';
+  import { useUserStore } from '@/stores/user'
+  import { storeToRefs } from 'pinia'
   const textRef = ref(null);
   const searchtext=ref('');
-  // 用户角色状态
-const userRole = ref('admin') // 可能的值: 'user', 'blogger', 'admin'
+  const userStore = useUserStore()
+  const { userRole } = storeToRefs(userStore)
 
-const menuItems = computed(() => {
-  // 游客菜单项
-  const visitorItems = [
-    {
-      label: '登录',
-      icon: 'SwitchButton',
-      path: '/login',
-      divided: true
-    }
-  ]
+  const menuItems = computed(() => {
+    // 打印当前角色，用于调试
+    console.log('当前用户角色:', userRole.value)
 
-  // 基础菜单项（登录用户可见）
-  const baseItems = [
-    {
-      label: '个人中心',
-      icon: 'User',
-      path: '/user'
-    },
-    {
-      label: '我的收藏',
-      icon: 'Star',
-      path: '/favorite'
-    },
-    {
-      label: '消息中心',
-      icon: 'Message',
-      path: '/message'
-    }
-  ]
-
-  // 博主和管理员可见的菜单项
-  const bloggerItems = [
+    // 游客菜单项
+    const visitorItems = [
       {
+        label: '登录',
+        icon: 'SwitchButton',
+        path: '/login',
+        divided: true
+      }
+    ]
+
+    // 如果是游客，直接返回游客菜单
+    if (!userStore.token || userRole.value === 'visitor') {
+      return visitorItems
+    }
+
+    // 基础菜单项（登录用户可见）
+    const baseItems = [
+      {
+        label: '个人中心',
+        icon: 'User',
+        path: '/user'
+      },
+      {
+        label: '我的收藏',
+        icon: 'Star',
+        path: '/favorite'
+      },
+      {
+        label: '消息中心',
+        icon: 'Message',
+        path: '/message'
+      }
+    ]
+
+    let items = [...baseItems]
+
+    // 根据角色添加额外菜单项
+    if (userRole.value === 'admin' || userRole.value === 'blogger') {
+      items.push(
+        {
           label: '写文章',
           icon: 'Edit',
           path: '/system/blog/edit',
           divided: true
-      },
-      {
+        },
+        {
           label: '我的文章',
           icon: 'Document',
           path: '/user/articles'
-      }
-  ]
-
-  // 仅管理员可见的菜单项
-  const adminItems = [
-      {
-          label: '后台管理',
-          icon: 'Setting',
-          path: '/system/dashboard',
-          divided: true
-      }
-  ]
-  let items = []
-  
-  // 根据用户角色返回对应菜单项
-  if (userRole.value === 'visitor') {
-    items = [...visitorItems]
-  } else {
-    items = [...baseItems]
-    
-    if (userRole.value === 'blogger' || userRole.value === 'admin') {
-      items = [...items, ...bloggerItems]
+        }
+      )
     }
 
     if (userRole.value === 'admin') {
-      items = [...items, ...adminItems]
+      items.push({
+        label: '后台管理',
+        icon: 'Setting',
+        path: '/system/dashboard',
+        divided: true
+      })
     }
 
-    // 只给已登录用户添加退出登录选项
+    // 添加退出登录选项
     items.push({
       label: '退出登录',
       icon: 'SwitchButton',
@@ -171,10 +170,9 @@ const menuItems = computed(() => {
       divided: true,
       action: handleLogout
     })
-  }
 
-  return items
-})
+    return items
+  })
   const handlerouter = (path) => {
     router.push(path);
   };
@@ -217,10 +215,18 @@ const menuItems = computed(() => {
     { path: '/test', label: '测试页面' },
   ];
   const handleLogout = () => {
-  ElMessage.success('退出成功');
-  userRole.value = 'user'; // 重置用户角色
-  router.push('/login');
-};
+    userStore.clearUserInfo()
+    
+    // 打印状态确认
+    console.log('退出登录后的状态:', {
+      userRole: userStore.userRole,
+      token: userStore.token,
+      userInfo: userStore.userInfo
+    })
+    
+    ElMessage.success('退出成功')
+    router.push('/login')
+  }
   const selectBox = (index) => {
     selectedIndex.value = index; // 更新选中索引
   };
@@ -228,6 +234,7 @@ const menuItems = computed(() => {
     const handleSearch = () => {
       if (searchtext.value.trim()) {
         console.log(`搜索内容: ${searchtext.value}`);
+        router.push('/search');
         ElMessage({
       message: '搜索施工中....',
       type: 'success',
@@ -254,12 +261,13 @@ const menuItems = computed(() => {
       flex:   1000px;
       flex-direction: row;
       align-items: center;
-      height: 100px;
+      height: 95px;
       background-color: #fff;
       padding: 0 20px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       width:100%;
       position: relative;
+      z-index: 1000;
     }
     .avatar-container {
       cursor: pointer;

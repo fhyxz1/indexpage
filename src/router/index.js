@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import index from '../views/index.vue'
 import layout from '../views/layout.vue'
 import login from '../views/dl.vue'
@@ -7,6 +8,8 @@ import blog from '../views/blog.vue'
 import test from '../test/testimg.vue'
 import systemRoutes from '../system/router'
 import user from '../components/usercenter.vue'
+import { useUserStore } from '@/stores/user'
+
 const routes = [
   {
     path: '/',
@@ -49,6 +52,12 @@ const routes = [
         component: () => import('../components/favorite.vue'),
         meta: { title: '收藏测试' }
       },
+      {
+        path: '/search',
+        name: 'search',
+        component: () => import('../components/search.vue'),
+        meta: { title: '搜索' }
+      },
     ]
   },
   {
@@ -72,29 +81,47 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
-router.beforeEach((to, from, next) => {
-  // 保存当前页面的标题
-  const originalTitle = document.title;
-  
-  // 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - ylab` : 'ylab';
+// 定义需要登录才能访问的路由
+const authRoutes = ['/user', '/favorite', '/message']
 
-  // 检查是否需要管理员权限
-  if (to.path.startsWith('/system')) {
-    // 这里应该检查用户是否是管理员
-    const isAdmin = true; // 临时模拟管理员检查
-    if (!isAdmin) {
-      // 如果不是管理员，重定向回用户原本试图访问的页面，并且保持原标题
-      document.title = originalTitle; // 保持原页面标题
-      next(from.fullPath); // 重定向回原页面
-      return;
-    }
+// 定义需要管理员权限的路由
+const adminRoutes = ['/system']
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore()
+  
+  // 如果有 token 但没有用户信息，尝试自动登录
+  if (localStorage.getItem('satoken') && !userStore.userInfo.username) {
+    await userStore.checkAuth()
   }
 
-  // 如果一切正常，继续跳转
-  next();
-});
-
+  // 检查是否需要登录权限
+  const needAuth = authRoutes.some(path => to.path.startsWith(path))
+  // 检查是否需要管理员权限
+  const needAdmin = adminRoutes.some(path => to.path.startsWith(path))
+  
+  if (needAdmin) {
+    // 检查管理员权限
+    if (!userStore.token) {
+      ElMessage.warning('请先登录')
+      next('/login')
+    } else if (userStore.userInfo.role !== 'admin') {
+      ElMessage.error('需要管理员权限')
+      next('/home')
+    } else {
+      next()
+    }
+  } else if (needAuth && !userStore.token) {
+    // 需要登录但未登录，重定向到登录页
+    ElMessage.warning('请先登录')
+    next('/login')
+  } else if (to.path === '/login' && userStore.token) {
+    // 已登录用户访问登录页面，重定向到首页
+    next('/home')
+  } else {
+    // 其他情况正常放行
+    next()
+  }
+})
 
 export default router

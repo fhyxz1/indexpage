@@ -14,8 +14,13 @@
   
       <!-- 用户操作选项卡 -->
       <el-tabs v-model="activeTab" class="user-tabs" type="border-card">
-        <el-tab-pane label="我的文章" name="articles">
+        <el-tab-pane label="我的文章" name="articles" v-if="user.role === 'admin'">
           <div class="tab-content">
+            <div class="article-header">
+              <el-button type="primary" @click="createNewArticle">
+                <el-icon><Plus /></el-icon>新建文章
+              </el-button>
+            </div>
             <div class="article-list">
               <div v-for="article in articles" :key="article.id" class="article-card">
                 <div class="article-info">
@@ -28,8 +33,8 @@
                   </div>
                 </div>
                 <div class="article-actions">
-                  <el-button type="primary" size="small">编辑</el-button>
-                  <el-button type="danger" size="small">删除</el-button>
+                  <el-button type="primary" size="small" @click="openEditDialog(article)">编辑</el-button>
+                  <el-button type="danger" size="small" @click="handleDeleteArticle(article.id)">删除</el-button>
                 </div>
               </div>
             </div>
@@ -67,27 +72,68 @@
             </el-form>
           </div>
         </el-tab-pane>
+        <el-tab-pane label="浏览历史" name="history">
+          <div class="tab-content">
+            <div class="article-list">
+              <div v-for="article in browsingHistory" :key="article.id" class="article-card">
+                <div class="article-info">
+                  <h3>{{ article.title }}</h3>
+                  <p class="article-desc">{{ article.description }}</p>
+                  <div class="article-meta">
+                    <span>浏览时间：{{ article.viewedAt }}</span>
+                    <span>阅读 {{ article.views }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
+  
+      <!-- 文章编辑对话框 -->
+      <el-dialog
+        :title="currentArticle.id ? '编辑文章' : '新建文章'"
+        v-model="editDialogVisible"
+        width="50%"
+      >
+        <el-form :model="currentArticle" label-width="80px">
+          <el-form-item label="标题">
+            <el-input v-model="currentArticle.title" placeholder="请输入文章标题" />
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input
+              v-model="currentArticle.description"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入文章描述"
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="editDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="saveArticle">确定</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </div>
   </template>
   
   <script setup>
-  import { ref } from "vue";
+  import { ref, onMounted } from "vue";
   import { ElMessage, ElMessageBox } from "element-plus";
-  import { Edit, SwitchButton } from '@element-plus/icons-vue'
+  import { Edit, SwitchButton, Plus } from '@element-plus/icons-vue'
   
   // 用户数据
   const user = ref({
     name: "张三",
     email: "zhangsan@example.com",
     avatar: "https://via.placeholder.com/100",
-    bio: "",
+    bio: "前端开发工程师",
     notifications: true,
-    privacy: "public"
+    privacy: "public",
+    role: "user"
   });
-  
-  // 当前激活的选项卡
-  const activeTab = ref("articles");
   
   // 文章数据
   const articles = ref([
@@ -109,24 +155,144 @@
     }
   ]);
   
-  // 编辑资料
-  const editProfile = () => {
-    ElMessage({
-      message: "编辑资料功能待实现",
-      type: "info",
-    });
+  // 当前激活的选项卡
+  const activeTab = ref("articles");
+  
+  // 编辑文章对话框
+  const editDialogVisible = ref(false);
+  const currentArticle = ref({
+    id: null,
+    title: '',
+    description: '',
+  });
+  
+  // 获取用户信息
+  const fetchUserInfo = async () => {
+    try {
+      // const response = await axios.get('/api/user/info');
+      // user.value = response.data;
+      ElMessage.success('获取用户信息成功');
+    } catch (error) {
+      ElMessage.error('获取用户信息失败');
+    }
   };
   
-
-  
-  // 保存设置
-  const saveSettings = () => {
-    ElMessage({
-      message: "设置已保存",
-      type: "success",
-    });
-    // 执行保存逻辑
+  // 获取文章列表
+  const fetchArticles = async () => {
+    try {
+      // const response = await axios.get('/api/user/articles');
+      // articles.value = response.data;
+      ElMessage.success('获取文章列表成功');
+    } catch (error) {
+      ElMessage.error('获取文章列表失败');
+    }
   };
+  
+  // 删除文章
+  const handleDeleteArticle = async (articleId) => {
+    try {
+      await ElMessageBox.confirm('确定要删除这篇文章吗？', '提示', {
+        type: 'warning'
+      });
+      
+      // await axios.delete(`/api/articles/${articleId}`);
+      articles.value = articles.value.filter(article => article.id !== articleId);
+      ElMessage.success('删除成功');
+    } catch (error) {
+      if (error !== 'cancel') {
+        ElMessage.error('删除失败');
+      }
+    }
+  };
+  
+  // 打开编辑对话框
+  const openEditDialog = (article) => {
+    currentArticle.value = { ...article };
+    editDialogVisible.value = true;
+  };
+  
+  // 保存文章
+  const saveArticle = async () => {
+    try {
+      if (currentArticle.value.id) {
+        // 编辑现有文章
+        // await axios.put(`/api/articles/${currentArticle.value.id}`, currentArticle.value);
+        const index = articles.value.findIndex(a => a.id === currentArticle.value.id);
+        articles.value[index] = { ...currentArticle.value };
+      } else {
+        // 创建新文章
+        // const response = await axios.post('/api/articles', currentArticle.value);
+        const newArticle = {
+          ...currentArticle.value,
+          id: Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          views: 0,
+          likes: 0
+        };
+        articles.value.unshift(newArticle);
+      }
+      editDialogVisible.value = false;
+      ElMessage.success('保存成功');
+    } catch (error) {
+      ElMessage.error('保存失败');
+    }
+  };
+  
+  // 创建新文章
+  const createNewArticle = () => {
+    currentArticle.value = {
+      id: null,
+      title: '',
+      description: ''
+    };
+    editDialogVisible.value = true;
+  };
+  
+  // 保存用户设置
+  const saveSettings = async () => {
+    try {
+      // await axios.put('/api/user/settings', user.value);
+      ElMessage.success('设置已保存');
+    } catch (error) {
+      ElMessage.error('保存失败');
+    }
+  };
+  
+  // 添加浏览历史数据
+  const browsingHistory = ref([
+    {
+      id: 1,
+      title: "Vue3 组件开发实践",
+      description: "本文介绍了Vue3组件开发的最佳实践和常用技巧...",
+      viewedAt: "2024-03-20 15:30",
+      views: 1234
+    },
+    {
+      id: 2,
+      title: "前端性能优化指南",
+      description: "深入探讨前端性能优化的各种技术和方法...",
+      viewedAt: "2024-03-19 10:15",
+      views: 2345
+    }
+  ]);
+  
+  // 获取浏览历史
+  const fetchBrowsingHistory = async () => {
+    try {
+      // const response = await axios.get('/api/user/browsing-history');
+      // browsingHistory.value = response.data;
+      ElMessage.success('获取浏览历史成功');
+    } catch (error) {
+      ElMessage.error('获取浏览历史失败');
+    }
+  };
+  
+  // 页面加载时获取数据
+  onMounted(() => {
+    fetchUserInfo();
+    fetchArticles();
+    fetchBrowsingHistory();
+  });
   </script>
   
   <style scoped>
@@ -504,6 +670,51 @@
     color: #606266;
     font-size: 14px;
     line-height: 1.6;
+  }
+  
+  .article-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  /* 文章列表的过渡动画 */
+  .article-list {
+    transition: all 0.3s ease;
+  }
+  
+  .article-card {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 浏览历史卡片样式优化 */
+  .article-card .article-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .article-card .article-meta span:not(:last-child)::after {
+    content: "•";
+    margin-left: 16px;
+    color: #dcdfe6;
   }
   </style>
   

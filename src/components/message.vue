@@ -107,14 +107,14 @@ export default {
 }
 
 .tab-item.active {
-  color: #1890ff;
-  border-bottom: 2px solid #1890ff;
+  color: #0098ff;
+  border-bottom: 2px solid #0098ff;
   font-weight: 500;
   background-color: transparent;
 }
 
 .tab-item:hover {
-  color: #1890ff;
+  color: #0098ff;
   background-color: transparent;
 }
 
@@ -125,7 +125,7 @@ export default {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #1890ff;
+  background-color: #0098ff;
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
@@ -142,7 +142,7 @@ export default {
   position: absolute;
   top: 0;
   right: -12px;
-  background-color: #ff4d4f;
+  background-color: #2fb3ff;
   color: white;
   border-radius: 10px;
   padding: 0 6px;
@@ -162,30 +162,41 @@ export default {
 }
 
 .message-item {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 12px;
   background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 152, 255, 0.06);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.message-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 152, 255, 0.1);
 }
 
 .message-item.unread {
-  background-color: #f0f9ff;
+  background-color: #e6f7ff;
+  border-left: 4px solid #0098ff;
 }
 
 .message-title {
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
   font-size: 16px;
+  color: #1f1f1f;
+  font-weight: 600;
 }
 
 .message-text {
   margin: 0;
-  color: #666;
+  color: #434343;
+  line-height: 1.6;
 }
 
 .message-time {
   font-size: 12px;
-  color: #999;
-  margin-top: 8px;
+  color: #666;
+  margin-top: 12px;
   display: block;
 }
 </style>

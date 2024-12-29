@@ -8,7 +8,10 @@ import { NavBar } from 'vant';
 import 'vant/lib/index.css';
 import { Icon } from 'vant';
 import { DropdownMenu, DropdownItem } from 'vant';
+import { createPinia } from 'pinia'
 import { Popup, Search,Cell } from 'vant';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+
 import {
   Skeleton,
   SkeletonTitle,
@@ -17,6 +20,12 @@ import {
   SkeletonParagraph,
 } from 'vant';
 const app = createApp(App);
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+
+// 确保 Pinia 在其他插件之前注册
+app.use(pinia)
 app.use(Skeleton);
 app.use(SkeletonTitle);
 app.use(SkeletonImage);

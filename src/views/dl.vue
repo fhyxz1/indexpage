@@ -34,6 +34,7 @@
             :model="loginForm"
             :rules="loginRules"
             class="form"
+            @submit.prevent="handleLogin"
           >
             <el-form-item prop="username">
               <el-input
@@ -63,7 +64,7 @@
                 </div>
               </div>
             </el-form-item>
-            <el-button type="primary" class="submit-btn" @click="handleLogin">
+            <el-button type="primary" class="submit-btn" native-type="submit">
               登录
             </el-button>
           </el-form>
@@ -725,7 +726,7 @@
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  image-rendering: -webkit-optimize-contrast; /* 提高图片清晰度 */
+  image-rendering: -webkit-optimize-contrast; /* 提高图片��晰度 */
 }
 
 /* 深色模式适配 */
@@ -757,7 +758,12 @@
 import { ref, reactive, onMounted } from 'vue'
 import { User, Lock, Message, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios' // 后续启用
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 const isRegisterMode = ref(false)
 const loginFormRef = ref(null)
@@ -898,32 +904,47 @@ const handleLogin = async () => {
   await loginFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        // 模拟登录成功
-        ElMessage.success('登录成功')
-        
-        /* 后续启用
-        const res = await axios.post('/api/login', {
+        // 发送登录请求到后端
+        const res = await axios.post('http://localhost:8080/api/users/login', {
           username: loginForm.username,
-          password: loginForm.password,
-          captcha: loginForm.captcha,
-          captchaKey: captchaKey.value
+          password: loginForm.password
         })
-        if (res.data.code === 200) {
-          ElMessage.success('登录成功')
-          // 处理登录成功逻辑
-        } else {
-          ElMessage.error(res.data.message)
-          refreshCaptcha()
-        }
-        */
+
+        // 打印原始响应数据
+        console.log('登录响应数据:', res.data)
+
+        // 解构响应数据，使用正确的字段名
+        const { userid, token, role, fullname } = res.data
+
+        // 使用 Pinia store 存储用户信息
+        userStore.setUserInfo({
+          userid: userid,
+          username: loginForm.username,
+          role: role.toLowerCase(), // 转换为小写以保持一致性
+          fullname: fullname
+        })
+        userStore.setToken(token)
+        
+        // 打印存储后的状态以验证
+        console.log('存储的用户信息:', {
+          token: userStore.token,
+          userInfo: userStore.userInfo,
+          userRole: userStore.userRole
+        })
+        
+        ElMessage.success('登录成功')
+        router.push('/home')
       } catch (error) {
-        ElMessage.error('登录失败')
-        refreshCaptcha()
+        console.error('登录错误:', error)
+        if (error.response?.status === 401) {
+          ElMessage.error('用户名或密码错误')
+        } else {
+          ElMessage.error('登录失败，请稍后重试')
+        }
       }
     }
   })
 }
-
 // 注册处理
 const handleRegister = async () => {
   if (!registerFormRef.value) return
@@ -931,27 +952,27 @@ const handleRegister = async () => {
     if (valid) {
       try {
         // 模拟注册成功
-        ElMessage.success('注册成功')
-        
-        /* 后续启用
-        const res = await axios.post('/api/register', {
+        // 你可以通过 uncomment 后面的代码启用真正的注册逻辑
+        const res = await axios.post('http://localhost:8080/api/users/register', {
           username: registerForm.username,
           email: registerForm.email,
           password: registerForm.password,
           captcha: registerForm.captcha,
           captchaKey: captchaKey.value
         })
+
+        // 判断注册结果
         if (res.data.code === 200) {
           ElMessage.success('注册成功')
-          // 处理注册成功逻辑
+          // 注册成功后可以进行跳转到登录页面，或者其他后续操作
         } else {
-          ElMessage.error(res.data.message)
-          refreshCaptcha()
+          ElMessage.error(res.data.message || '注册失败')
+          refreshCaptcha()  // 刷新验证码
         }
-        */
       } catch (error) {
-        ElMessage.error('注册失败')
-        refreshCaptcha()
+        console.error(error)
+        ElMessage.error('注册请求失败')
+        refreshCaptcha() // 刷新验证码
       }
     }
   })
