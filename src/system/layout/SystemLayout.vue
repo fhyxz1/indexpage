@@ -214,9 +214,9 @@ const handleLogout = () => {
   margin-left: auto;
 }
 .logo {
-  width: 32px;
-  height: 32px;
-  margin-right: 12px;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
 }
 
 .header {

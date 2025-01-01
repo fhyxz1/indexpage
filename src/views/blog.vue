@@ -20,23 +20,23 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import MobilePage from '../components/mobile/ydbloglist.vue';
 import DesktopPage from '../components/desktop/zmbloglist.vue';
-
+import axios from 'axios';
 // 声明一个响应式变量来存储设备类型
 const deviceType = ref('desktop');
 
 interface Category {
-  name: string;
-  subCategories: string[];
+  category_name: string;
+  tags: string[];
 }
 
 interface Article {
   id: number;
   image: string;
   title: string;
-  summary: string;
+  summary: string; 
   author: string;
   category: string;
-  subCategory: string;
+  tags: string;
 }
 
 // categories 类型为 Category[]
@@ -46,12 +46,13 @@ const categories = ref<Category[]>([]);
 const blogArticles = ref<Article[]>([]);
 const isLoading = ref<boolean>(true);
 
+
 // 获取分类数据
 const fetchCategories = async () => {
   try {
-    const response = await fetch('/api/categories');
-    const data = await response.json();
-    categories.value = data;
+    const response = await axios.get('http://localhost:8080/api/categories');
+    console.log(response.data)
+    categories.value = response.data;
   } catch (error) {
     console.error('获取分类失败:', error);
     // 可以添加错误处理逻辑
@@ -62,9 +63,8 @@ const fetchCategories = async () => {
 const fetchArticles = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch('/api/articles');
-    const data = await response.json();
-    blogArticles.value = data;
+    const response = await axios.get('http://localhost:8080/api/articles');
+    blogArticles.value = response.data;
   } catch (error) {
     console.error('获取文章列表失败:', error);
     // 可以添加错误处理逻辑
@@ -72,6 +72,7 @@ const fetchArticles = async () => {
     isLoading.value = false;
   }
 };
+
 
 // 判断设备类型的函数
 const checkDeviceType = () => {

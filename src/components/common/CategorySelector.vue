@@ -4,19 +4,20 @@
     <div class="category-list">
       <div
         v-for="category in categories"
-        :key="category.name"
+        :key="category.category_name"
         class="category-item"
-        :class="{ active: selectedCategory.name === category.name }"
+        :class="{ active: selectedCategory.category_name === category.category_name }"
         @click="selectCategory(category)"
       >
-        <span class="category-name">{{ category.name }}</span>
-        <span v-if="category.subCategories?.length" class="sub-count">
-          {{ category.subCategories.length }}
+        <span class="category-name">{{ category.category_name }}</span>
+        <span v-if="category.tags?.length" class="sub-count">
+          {{ category.tags.length }}
         </span>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
@@ -38,10 +39,12 @@ const props = defineProps({
 
 const emit = defineEmits(['update:selectedCategory']);
 
+// 修改了字段引用，确保逻辑与新字段一致
 const selectCategory = (category) => {
   emit('update:selectedCategory', category);
 };
 </script>
+
 
 <style scoped>
 .category-selector {

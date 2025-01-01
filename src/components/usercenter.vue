@@ -171,7 +171,7 @@
     try {
       // const response = await axios.get('/api/user/info');
       // user.value = response.data;
-      ElMessage.success('获取用户信息成功');
+      //ElMessage.success('获取用户信息成功');
     } catch (error) {
       ElMessage.error('获取用户信息失败');
     }
@@ -182,7 +182,7 @@
     try {
       // const response = await axios.get('/api/user/articles');
       // articles.value = response.data;
-      ElMessage.success('获取文章列表成功');
+      //ElMessage.success('获取文章列表成功');
     } catch (error) {
       ElMessage.error('获取文章列表失败');
     }
@@ -281,7 +281,7 @@
     try {
       // const response = await axios.get('/api/user/browsing-history');
       // browsingHistory.value = response.data;
-      ElMessage.success('获取浏览历史成功');
+      //ElMessage.success('获取浏览历史成功');
     } catch (error) {
       ElMessage.error('获取浏览历史失败');
     }

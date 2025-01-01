@@ -42,8 +42,8 @@
 import CategorySelector from '../common/CategorySelector.vue';
 
 interface Category {
-    name: string;
-    subCategories: string[];
+  category_name: string;
+    tags: string[];
   }
   
   interface Article {
@@ -53,7 +53,7 @@ interface Category {
     summary: string;
     author: string;
     category: string;
-    subCategory: string;
+    tags: string;
   }
   
   // 接收父组件传递的数据
@@ -72,7 +72,7 @@ interface Category {
     },
   });
   
-  const selectedCategory = ref<Category>({ name: '全部文章', subCategories: [] });
+  const selectedCategory = ref<Category>({ category_name: '全部文章', tags: [] });
   const filteredArticles = ref<Article[]>(props.articles);
   
   watch(() => props.articles, (newArticles) => {
@@ -85,9 +85,9 @@ interface Category {
   
   const filterArticles = () => {
     filteredArticles.value = props.articles.filter((article) => {
-      return !selectedCategory.value.name || 
-             selectedCategory.value.name === '全部文章' || 
-             article.category === selectedCategory.value.name;
+      return !selectedCategory.value.category_name || 
+             selectedCategory.value.category_name === '全部文章' || 
+             article.category === selectedCategory.value.category_name;
     });
   };
   
