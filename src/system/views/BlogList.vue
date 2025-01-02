@@ -20,6 +20,7 @@
         border
         stripe
       >
+        <el-table-column prop="postId" label="文章ID" width="100" align="center" />
         <el-table-column prop="title" label="标题">
           <template #default="scope">
             <div class="title-cell">
@@ -28,7 +29,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="author" label="作者" width="120" align="center" />
-        <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
+        <el-table-column prop="fbDate" label="创建时间" width="180" align="center" />
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="scope">
             <el-button-group>
@@ -66,6 +67,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, View, Edit, Delete } from '@element-plus/icons-vue'
+import axios from 'axios'
 
 const router = useRouter()
 const loading = ref(false)
@@ -74,24 +76,25 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-// 模拟数据
-const mockData = Array.from({ length: 25 }, (_, index) => ({
-  id: index + 1,
-  title: `示例博客标题${index + 1} - 这是一个较长的标题，用于测试省略号效果`,
-  author: `作者${index + 1}`,
-  createTime: '2024-12-07 12:00:00'
-}))
-
-const loadData = () => {
+// 替换模拟数据加载为实际API调用
+const loadData = async () => {
   loading.value = true
-  // 模拟API调用
-  setTimeout(() => {
-    total.value = mockData.length
-    const start = (currentPage.value - 1) * pageSize.value
-    const end = start + pageSize.value
-    blogList.value = mockData.slice(start, end)
+  try {
+    const response = await axios.get('http://localhost:8080/api/article', {
+      params: {
+        page: currentPage.value,
+        pageSize: pageSize.value
+      }
+    })
+    console.log(response.data)
+    blogList.value = response.data.items || response.data // 根据实际返回结构调整
+    total.value = response.data.total || response.data.length
+  } catch (error) {
+    console.error('获取博客列表失败:', error)
+    ElMessage.error('获取博客列表失败')
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 onMounted(() => {
@@ -113,36 +116,35 @@ const handleAdd = () => {
 }
 
 const handleView = (row) => {
-  router.push(`/system/blog/detail/${row.id}`)
+  router.push(`/system/blog/detail/${row.postId}`)
 }
 
 const handleEdit = (row) => {
-  router.push(`/system/blog/edit/${row.id}`)
+  router.push(`/system/blog/edit/${row.postId}`)
 }
 
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    '确定要删除这篇博客吗？此操作不可恢复',
-    '删除确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-      draggable: true
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这篇博客吗？此操作不可恢复',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        draggable: true
+      }
+    )
+    
+    await axios.delete(`http://localhost:8080/api/articles/${row.postId}`)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除博客失败:', error)
+      ElMessage.error('删除失败')
     }
-  ).then(() => {
-    // 实际项目中这里应该调用删除API
-    ElMessage({
-      type: 'success',
-      message: '删除成功'
-    })
-    loadData() // 重新加载数据
-  }).catch(() => {
-    ElMessage({
-      type: 'info',
-      message: '已取消删除'
-    })
-  })
+  }
 }
 </script>
 

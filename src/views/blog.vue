@@ -23,7 +23,7 @@ import DesktopPage from '../components/desktop/zmbloglist.vue';
 import axios from 'axios';
 // 声明一个响应式变量来存储设备类型
 const deviceType = ref('desktop');
-
+const server="http://localhost:8080"
 interface Category {
   category_name: string;
   tags: string[];
@@ -31,7 +31,7 @@ interface Category {
 
 interface Article {
   id: number;
-  image: string;
+  imgUrl: string;
   title: string;
   summary: string; 
   author: string;
@@ -65,6 +65,8 @@ const fetchArticles = async () => {
   try {
     const response = await axios.get('http://localhost:8080/api/articles');
     blogArticles.value = response.data;
+ console.log(blogArticles.value);
+    
   } catch (error) {
     console.error('获取文章列表失败:', error);
     // 可以添加错误处理逻辑

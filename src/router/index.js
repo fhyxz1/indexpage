@@ -6,7 +6,7 @@ import login from '../views/dl.vue'
 import Home from '../views/home.vue'
 import blog from '../views/blog.vue'
 import test from '../views/test.vue'
-import systemRoutes from '../system/router'
+import { systemRouter } from '../system/router'
 import user from '../components/usercenter.vue'
 import { useUserStore } from '@/stores/user'
 
@@ -73,7 +73,7 @@ const routes = [
     meta: { title: '测试' }
   },
   // 集成后台管理路由
-  ...systemRoutes
+  ...systemRouter.options.routes
 ]
 
 const router = createRouter({

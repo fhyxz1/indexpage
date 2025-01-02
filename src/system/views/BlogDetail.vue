@@ -5,13 +5,15 @@
       <el-button @click="handleBack">返回</el-button>
     </div>
     
-    <div class="content">
-      <h1 class="title">{{ blog.title }}</h1>
-      <div class="meta">
-        <span>作者：{{ blog.author }}</span>
-        <span>创建时间：{{ blog.createTime }}</span>
-      </div>
-      <div class="blog-content" v-html="blog.content"></div>
+    <div class="content" v-loading="loading">
+      <template v-if="blog.title">
+        <h1 class="title">{{ blog.title }}</h1>
+        <div class="meta">
+          <span>作者：{{ blog.author }}</span>
+          <span>创建时间：{{ blog.createTime }}</span>
+        </div>
+        <div class="blog-content" v-html="blog.content"></div>
+      </template>
     </div>
   </div>
 </template>
@@ -19,6 +21,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,14 +34,34 @@ const blog = ref({
   content: ''
 })
 
-onMounted(() => {
-  // 实际项目中这里应该调用API获取博客详情
-  blog.value = {
-    title: '示例博客标题',
-    author: '作者',
-    createTime: '2024-12-07 12:00:00',
-    content: '<p>这是博客的详细内容...</p><p>支持<strong>富文本</strong>格式</p>'
+const loading = ref(false)
+
+const loadBlogDetail = async () => {
+  loading.value = true
+  try {
+    const blogId = route.params.id
+    console.log('当前文章ID:', blogId)
+    
+    const response = await axios.get(`http://localhost:8080/api/articles/${blogId}`)
+    console.log('API返回数据:', response.data)
+    
+    const data = response.data
+    blog.value = {
+      title: data.title,
+      author: data.author,
+      createTime: data.fbDate,
+      content: data.content
+    }
+  } catch (error) {
+    console.error('获取博客详情失败:', error)
+    ElMessage.error('获取博客详情失败')
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(() => {
+  loadBlogDetail()
 })
 
 const handleBack = () => {

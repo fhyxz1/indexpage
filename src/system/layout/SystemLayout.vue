@@ -31,6 +31,25 @@
             <el-menu-item index="/system/blog/edit">新建博客</el-menu-item>
           </el-sub-menu>
 
+
+          <!-- 用户管理 -->
+          <el-menu-item index="/system/users">
+            <el-icon><User /></el-icon>
+            <span>用户管理</span>
+          </el-menu-item>
+          
+          <!-- 公告管理 -->
+          <el-menu-item index="/system/announcements">
+            <el-icon><Bell /></el-icon>
+            <span>公告管理</span>
+          </el-menu-item>
+          
+          <!-- 留言管理 -->
+          <el-menu-item index="/system/comments">
+            <el-icon><ChatDotRound /></el-icon>
+            <span>留言管理</span>
+          </el-menu-item>
+          
           <el-sub-menu index="/system/settings">
             <template #title>
               <el-icon><Setting /></el-icon>
@@ -123,7 +142,9 @@ import {
   CaretBottom,
   User,
   Lock,
-  SwitchButton
+  SwitchButton,
+  Bell,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

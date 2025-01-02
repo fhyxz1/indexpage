@@ -2,7 +2,7 @@
   <div class="blog-container">
     <CategorySelector
       v-model:selectedCategory="selectedCategory"
-      :categories="categories"
+      :categories="allCategories"
       :isMobile="true"
     />
 
@@ -25,8 +25,8 @@
 
     <!-- 博客文章数据展示 -->
     <div v-else>
-      <div v-for="article in articles" :key="article.id" class="blog-card">
-        <img :src="article.image" alt="Article Image" class="blog-image" />
+      <div v-for="article in filteredArticles" :key="article.id" class="blog-card">
+        <img :src="server + article.imgUrl" alt="Article Image" class="blog-image" />
         <div class="blog-text">
           <h3 class="blog-title">{{ article.title }}</h3>
           <p class="blog-summary">{{ article.summary }}</p>
@@ -38,9 +38,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue';
+  import { ref, onMounted, watch, computed } from 'vue';
 import CategorySelector from '../common/CategorySelector.vue';
-
+const server="http://localhost:8080"
 interface Category {
   category_name: string;
     tags: string[];
@@ -48,7 +48,7 @@ interface Category {
   
   interface Article {
     id: number;
-    image: string;
+    imgUrl: string;
     title: string;
     summary: string;
     author: string;
@@ -75,25 +75,31 @@ interface Category {
   const selectedCategory = ref<Category>({ category_name: '全部文章', tags: [] });
   const filteredArticles = ref<Article[]>(props.articles);
   
-  watch(() => props.articles, (newArticles) => {
-    filteredArticles.value = newArticles;
+  // 添加计算属性来合并全部文章选项和后端分类
+  const allCategories = computed(() => {
+    const allArticlesCategory: Category = { category_name: '全部文章', tags: [] };
+    return [allArticlesCategory, ...props.categories];
   });
+  
+  watch(
+    [() => selectedCategory.value, () => props.articles],
+    () => {
+      filterArticles();
+    }
+  );
   
   onMounted(() => {
     filteredArticles.value = props.articles;
   });
   
   const filterArticles = () => {
-    filteredArticles.value = props.articles.filter((article) => {
-      return !selectedCategory.value.category_name || 
-             selectedCategory.value.category_name === '全部文章' || 
-             article.category === selectedCategory.value.category_name;
-    });
-  };
-  
-  const selectCategory = (category: Category) => {
-    selectedCategory.value = category;
-    filterArticles();
+    if (!selectedCategory.value || selectedCategory.value.category_name === '全部文章') {
+      filteredArticles.value = props.articles;
+    } else {
+      filteredArticles.value = props.articles.filter((article) => {
+        return article.category === selectedCategory.value.category_name;
+      });
+    }
   };
 </script>
 
