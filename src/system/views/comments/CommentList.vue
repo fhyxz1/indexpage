@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-list">
+  <div class="Guestbook-list">
     <el-card>
       <template #header>
         <div class="card-header">
@@ -27,7 +27,7 @@
       </el-form>
 
       <!-- 留言列表 -->
-      <el-table :data="commentList" v-loading="loading" border>
+      <el-table :data="paginatedGuestbooks" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="content" label="留言内容" show-overflow-tooltip />
@@ -61,13 +61,6 @@
               <el-button 
                 type="primary" 
                 link
-                @click="handleReply(row)"
-              >
-                回复
-              </el-button>
-              <el-button 
-                type="danger" 
-                link
                 @click="handleDelete(row)"
               >
                 删除
@@ -90,48 +83,16 @@
         />
       </div>
     </el-card>
-
-    <!-- 回复对话框 -->
-    <el-dialog
-      v-model="replyDialogVisible"
-      title="回复留言"
-      width="500px"
-    >
-      <el-form
-        ref="replyFormRef"
-        :model="replyForm"
-        :rules="replyRules"
-      >
-        <el-form-item 
-          label="回复内容" 
-          prop="content"
-          :label-width="'80px'"
-        >
-          <el-input
-            v-model="replyForm.content"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入回复内容"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="replyDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitReply">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import type { FormInstance } from 'element-plus';
 
 // 定义接口
-interface Comment {
+interface Guestbook {
   id: number;
   username: string;
   content: string;
@@ -146,32 +107,16 @@ interface SearchForm {
 
 // 状态定义
 const loading = ref(false);
-const commentList = ref<Comment[]>([]);
+const allGuestbooks = ref<Guestbook[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const replyDialogVisible = ref(false);
-const replyFormRef = ref<FormInstance>();
 
 // 搜索表单
 const searchForm = ref<SearchForm>({
   username: '',
   status: ''
 });
-
-// 回复表单
-const replyForm = ref({
-  commentId: null as number | null,
-  content: ''
-});
-
-// 回复表单验证规则
-const replyRules = {
-  content: [
-    { required: true, message: '请输入回复内容', trigger: 'blur' },
-    { min: 1, max: 500, message: '长度在 1 到 500 个字符', trigger: 'blur' }
-  ]
-};
 
 // 工具方法
 const getStatusType = (status: string) => {
@@ -192,19 +137,32 @@ const getStatusLabel = (status: string) => {
   return labels[status] || '未知';
 };
 
+// 处理过滤和分页
+const filteredGuestbooks = computed(() => {
+  return allGuestbooks.value.filter(Guestbook => {
+    const matchesUsername = !searchForm.value.username || Guestbook.username.includes(searchForm.value.username);
+    const matchesStatus = !searchForm.value.status || Guestbook.status === searchForm.value.status;
+    return matchesUsername && matchesStatus;
+  });
+});
+
+const paginatedGuestbooks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  total.value = filteredGuestbooks.value.length;
+  return filteredGuestbooks.value.slice(start, end);
+});
+
 // 获取留言列表
-const fetchCommentList = async () => {
+const fetchGuestbookList = async () => {
   loading.value = true;
   try {
-    // TODO: 调用后端API获取留言列表
-    // const { data } = await getCommentList({
-    //   page: currentPage.value,
-    //   pageSize: pageSize.value,
-    //   ...searchForm.value
-    // });
-    // commentList.value = data.list;
-    // total.value = data.total;
+    const response = await axios.get('http://localhost:8080/api/guestbook/getlist');
+    allGuestbooks.value =response.data
+    console.log(response.data);
+    loading.value = false;
   } catch (error) {
+    loading.value = false;
     ElMessage.error('获取留言列表失败');
   } finally {
     loading.value = false;
@@ -214,7 +172,6 @@ const fetchCommentList = async () => {
 // 搜索相关方法
 const handleSearch = () => {
   currentPage.value = 1;
-  fetchCommentList();
 };
 
 const resetSearch = () => {
@@ -228,64 +185,34 @@ const resetSearch = () => {
 // 分页相关方法
 const handleSizeChange = (val: number) => {
   pageSize.value = val;
-  fetchCommentList();
 };
 
 const handleCurrentChange = (val: number) => {
   currentPage.value = val;
-  fetchCommentList();
 };
 
 // 留言操作相关方法
-const handleApprove = async (row: Comment) => {
+const handleApprove = async (row: Guestbook) => {
   try {
-    // TODO: 调用后端API通过留言
-    // await approveComment(row.id);
+    await axios.post(`http://localhost:8080/api/guestbook/${row.id}/approve`);
     ElMessage.success('审核通过成功');
-    fetchCommentList();
+    fetchGuestbookList();
   } catch (error) {
     ElMessage.error('操作失败');
   }
 };
 
-const handleReject = async (row: Comment) => {
+const handleReject = async (row: Guestbook) => {
   try {
-    // TODO: 调用后端API拒绝留言
-    // await rejectComment(row.id);
+    await axios.post(`http://localhost:8080/api/guestbook/${row.id}/reject`);
     ElMessage.success('拒绝成功');
-    fetchCommentList();
+    fetchGuestbookList();
   } catch (error) {
     ElMessage.error('操作失败');
   }
 };
 
-const handleReply = (row: Comment) => {
-  replyForm.value = {
-    commentId: row.id,
-    content: ''
-  };
-  replyDialogVisible.value = true;
-};
-
-const submitReply = async () => {
-  if (!replyFormRef.value) return;
-  
-  await replyFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // TODO: 调用后端API提交回复
-        // await replyComment(replyForm.value);
-        ElMessage.success('回复成功');
-        replyDialogVisible.value = false;
-        fetchCommentList();
-      } catch (error) {
-        ElMessage.error('回复失败');
-      }
-    }
-  });
-};
-
-const handleDelete = (row: Comment) => {
+const handleDelete = (row: Guestbook) => {
   ElMessageBox.confirm(
     '确定要删除该留言吗？',
     '警告',
@@ -296,10 +223,9 @@ const handleDelete = (row: Comment) => {
     }
   ).then(async () => {
     try {
-      // TODO: 调用后端API删除留言
-      // await deleteComment(row.id);
+      await axios.delete(`http://localhost:8080/api/guestbook/${row.id}`);
       ElMessage.success('删除成功');
-      fetchCommentList();
+      fetchGuestbookList();
     } catch (error) {
       ElMessage.error('删除失败');
     }
@@ -308,12 +234,12 @@ const handleDelete = (row: Comment) => {
 
 // 初始化
 onMounted(() => {
-  fetchCommentList();
+  fetchGuestbookList();
 });
 </script>
 
 <style scoped>
-.comment-list {
+.Guestbook-list {
   padding: 20px;
 }
 
@@ -336,9 +262,4 @@ onMounted(() => {
 :deep(.el-table) {
   margin-top: 20px;
 }
-
-.dialog-footer {
-  padding-top: 20px;
-  text-align: right;
-}
-</style> 
+</style>

@@ -6,6 +6,7 @@ import login from '../views/dl.vue'
 import Home from '../views/home.vue'
 import blog from '../views/blog.vue'
 import test from '../views/test.vue'
+import wz from '../components/desktop/zmblog.vue'
 import { systemRouter } from '../system/router'
 import user from '../components/usercenter.vue'
 import { useUserStore } from '@/stores/user'
@@ -32,7 +33,12 @@ const routes = [
         path: '/blog',
         name: 'blog',
         component: blog,
-        meta: { title: '博客' }
+        meta: { title: '博客' },
+      },
+      {
+        path: '/article/:id',
+        name: 'article',
+        component: wz,
       },
       {
         path: '/user',

@@ -19,20 +19,6 @@
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
-
-      <div class="reply-section" v-if="comment.replies && comment.replies.length">
-        <h3>回复记录</h3>
-        <el-timeline>
-          <el-timeline-item
-            v-for="reply in comment.replies"
-            :key="reply.id"
-            :timestamp="reply.createTime"
-          >
-            <p class="reply-content">{{ reply.content }}</p>
-            <p class="reply-info">回复人：{{ reply.replyUser }}</p>
-          </el-timeline-item>
-        </el-timeline>
-      </div>
     </el-card>
   </div>
 </template>
@@ -41,16 +27,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-
-const route = useRoute();
 const router = useRouter();
-
-interface Reply {
-  id: number;
-  content: string;
-  replyUser: string;
-  createTime: string;
-}
 
 interface CommentDetail {
   id: number;
@@ -58,16 +35,14 @@ interface CommentDetail {
   content: string;
   createTime: string;
   status: string;
-  replies?: Reply[];
 }
 
 const comment = ref<CommentDetail>({
-  id: 0,
-  username: '',
-  content: '',
-  createTime: '',
-  status: '',
-  replies: []
+  id: 123,
+  username: '张三',
+  content: '这是一条测试留言。',
+  createTime: '2025-01-05 10:00:00',
+  status: 'approved'
 });
 
 const getStatusType = (status: string) => {
@@ -118,22 +93,7 @@ onMounted(() => {
   align-items: center;
 }
 
-.reply-section {
-  margin-top: 30px;
-}
-
-.reply-content {
-  margin: 0;
-  font-size: 14px;
-}
-
-.reply-info {
-  margin: 5px 0 0;
-  font-size: 12px;
-  color: #999;
-}
-
 :deep(.el-descriptions) {
   margin: 20px 0;
 }
-</style> 
+</style>

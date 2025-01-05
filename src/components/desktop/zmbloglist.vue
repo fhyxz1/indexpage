@@ -20,7 +20,7 @@
 
     <!-- 博客文章数据展示 -->
     <el-row v-else class="blog-row">
-      <el-col :span="20" v-for="article in filteredArticles" :key="article.id">
+      <el-col :span="20" v-for="article in filteredArticles" :key="article.postId" @click="$router.push(`/article/${article.postId}`)">
         <el-card class="blog-card">
           <img :src="server+article.imgUrl" alt="Article Image" class="blog-image" />
           <div class="blog-text">
@@ -45,7 +45,7 @@ interface Category {
   }
   
   interface Article {
-    id: number;
+    postId: number;
     imgUrl: string;
     title: string;
     summary: string;

@@ -76,7 +76,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-// 替换模拟数据加载为实际API调用
+// API调用
 const loadData = async () => {
   loading.value = true
   try {

@@ -113,37 +113,89 @@
       </el-card>
 
       <!-- 留言板 -->
-      <el-card class="message-board card-container">
-        <h2 class="section-title">留言板</h2>
-        <div class="danmaku-container" ref="danmakuContainer">
-          <div 
-            v-for="message in messages" 
-            :key="message.id" 
-            class="danmaku-item"
-            :style="message.style"
-          >
-            {{ message.content }}
-          </div>
-        </div>
-        <div class="message-input">
-          <el-input
-            v-model="newMessage"
-            placeholder="说点什么吧..."
-            @keyup.enter="sendMessage"
-          >
-            <template #append>
-              <el-button type="primary" @click="sendMessage">发送</el-button>
-            </template>
-          </el-input>
-        </div>
-      </el-card>
+        <!-- 留言板 -->
+  <el-card class="message-board card-container">
+    <h2 class="section-title">留言板</h2>
+    <div class="danmaku-container" ref="danmakuContainer">
+      <div 
+        v-for="message in messages" 
+        :key="message.id" 
+        class="danmaku-item"
+        :style="message.style"
+      >
+        {{ message.username }}:
+         {{ message.content }}
+      </div>
+    </div>
+    <div class="message-input">
+      <el-input
+        v-model="newMessage"
+        placeholder="说点什么吧..."
+        @keyup.enter="sendMessage"
+      >
+        <template #append>
+          <el-button type="primary" @click="sendMessage">发送</el-button>
+        </template>
+      </el-input>
+    </div>
+  </el-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref ,onMounted} from 'vue';
 import { Platform, Message, Location, Link } from '@element-plus/icons-vue'
+let nextId = 5; // 假设已有一些默认弹幕
+const occupiedPositions = []; // 用于记录已经占用的垂直位置
+
+const createDanmaku = (username, content) => {
+  // 获取容器的高度
+  const containerHeight = danmakuContainer.value.offsetHeight; // 使用 ref 获取容器高度
+
+  // 计算允许生成弹幕的区域（上下10%区域）
+  const upperLimit = containerHeight * 0.1; // 容器高度的上 10% 下方
+  const lowerLimit = containerHeight * 0.9 - 50; // 容器高度的下 10% 上方（减去弹幕高度）
+
+  let randomPosition;
+  let attempts = 0; // 尝试次数
+  const maxAttempts = 10; // 最大尝试次数
+
+  // 随机生成弹幕位置，确保不与已占用的位置重叠
+  do {
+    randomPosition = Math.random() * (lowerLimit - upperLimit) + upperLimit;
+
+    // 检查当前位置是否已经被占用
+    const isOccupied = occupiedPositions.some(position => Math.abs(position - randomPosition) < 50); // 50是弹幕的高度或间隔
+    if (!isOccupied) {
+      // 如果当前位置没有重叠，则记录该位置
+      occupiedPositions.push(randomPosition);
+      break;
+    }
+
+    attempts++;
+  } while (attempts < maxAttempts);
+
+  // 如果尝试次数达到最大值，选择一个随机的位置
+  if (attempts >= maxAttempts) {
+    randomPosition = Math.random() * (lowerLimit - upperLimit) + upperLimit;
+  }
+
+  // 随机生成弹幕的动画速度
+  const randomSpeed = Math.random() * 5 + 5;
+
+  return {
+    id: nextId++, // 自动递增 ID
+    username,
+    content,
+    style: {
+      top: `${randomPosition}px`,
+      animationDuration: `${randomSpeed}s`,
+    },
+  };
+};
+
+
 // 数据模拟
 const carouselItems = [
   { id: 1, image: 'path/to/image1.jpg', title: 'Flutter 路由探索', description: '静态路由与动态路由' },
@@ -174,39 +226,71 @@ const messages = ref([]);
 const newMessage = ref('');
 const danmakuContainer = ref(null);
 
-const createDanmaku = (content) => {
-  const id = Date.now();
-  const top = Math.random() * 70; // 随机垂直位置
-  const style = {
-    top: `${top}%`,
-    animationDuration: '10s',
-    animationDelay: '0s'
-  };
-  
-  return {
-    id,
-    content,
-    style
-  };
+import axios from 'axios';
+import { ElMessage } from 'element-plus';
+import { useUserStore } from '@/stores/user'
+const userStore = useUserStore()
+const fetchMessages = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/guestbook/usergetlist');
+    const messagesData = response.data;
+    // 将后端返回的数据映射为弹幕数据格式
+    messagesData.forEach((msg) => {
+      const danmaku = createDanmaku(msg.username, msg.content);
+      messages.value.push(danmaku);
+      // 为弹幕设置自动移除
+      setTimeout(() => {
+        const index = messages.value.findIndex((m) => m.id === danmaku.id);
+        if (index !== -1) {
+          messages.value.splice(index, 1);
+        }
+      }, 10000);
+    });
+  } catch (error) {
+    ElMessage.error('获取留言失败：' + error);
+  }
 };
 
-const sendMessage = () => {
+
+// 发送留言
+const sendMessage = async () => {
+  // 确保留言内容非空
   if (!newMessage.value.trim()) return;
-  
-  const danmaku = createDanmaku(newMessage.value);
-  messages.value.push(danmaku);
-  
-  // 3秒后移除弹幕
-  setTimeout(() => {
-    const index = messages.value.findIndex(m => m.id === danmaku.id);
-    if (index !== -1) {
-      messages.value.splice(index, 1);
-    }
-  }, 10000);
-  
-  newMessage.value = '';
+
+  // 获取当前用户名
+  const username = useUserStore().userInfo.username; // 这里可以根据你的实际情况动态获取用户名
+
+  try {
+    // 发送请求到后端，包含 username 和 content
+    const response = await axios.post('http://localhost:8080/api/guestbook/add', {
+      username,
+      content: newMessage.value,
+    });
+    ElMessage.success('留言成功');
+    // 后端返回的数据包含内容和生成的 id
+    const danmaku = createDanmaku(response.data.username, response.data.content);
+
+    // 将弹幕加入到消息列表
+    messages.value.push(danmaku);
+
+    // 10秒后移除弹幕
+    setTimeout(() => {
+      const index = messages.value.findIndex(m => m.id === danmaku.id);
+      if (index !== -1) {
+        messages.value.splice(index, 1);
+      }
+    }, 10000);
+
+    // 清空输入框
+    newMessage.value = '';
+  } catch (error) {
+    console.error('发送留言失败：', error);
+  }
 };
 
+onMounted(() => {
+  fetchMessages();
+});
 //仓库跳转
 const handleSocialClick = (platform) => {
   const urls = {

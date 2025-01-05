@@ -25,7 +25,7 @@
 
     <!-- 博客文章数据展示 -->
     <div v-else>
-      <div v-for="article in filteredArticles" :key="article.id" class="blog-card">
+      <div v-for="article in filteredArticles" :key="article.postId" @click="$router.push(`/article/${article.postId}`)" class="blog-card">
         <img :src="server + article.imgUrl" alt="Article Image" class="blog-image" />
         <div class="blog-text">
           <h3 class="blog-title">{{ article.title }}</h3>
@@ -40,6 +40,11 @@
 <script setup lang="ts">
   import { ref, onMounted, watch, computed } from 'vue';
 import CategorySelector from '../common/CategorySelector.vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+// const navigateToArticle = (id: number) => {
+//   $router.push(`/system/announcements/edit/${row.id}`)
+// };
 const server="http://localhost:8080"
 interface Category {
   category_name: string;
@@ -47,7 +52,7 @@ interface Category {
   }
   
   interface Article {
-    id: number;
+    postId: number;
     imgUrl: string;
     title: string;
     summary: string;

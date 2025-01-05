@@ -29,8 +29,12 @@
             </template>
             <el-menu-item index="/system/blog">博客列表</el-menu-item>
             <el-menu-item index="/system/blog/edit">新建博客</el-menu-item>
-          </el-sub-menu>
 
+            <!-- 新增分类管理 -->
+            <el-menu-item index="/system/categories">
+              分类管理
+            </el-menu-item>
+          </el-sub-menu>
 
           <!-- 用户管理 -->
           <el-menu-item index="/system/users">
@@ -127,6 +131,7 @@
     </el-container>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed } from 'vue'

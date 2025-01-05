@@ -768,9 +768,9 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-
-const router = useRouter()
 const userStore = useUserStore()
+const router = useRouter()
+
 
 const isRegisterMode = ref(false)
 const loginFormRef = ref(null)

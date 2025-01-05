@@ -62,7 +62,7 @@
   </div>
   <div class="footer">
     <div class="footer-content">
-      <p>© 2024 Your Company. All Rights Reserved.</p>
+      <p>© 2024 ylab. All rights reserved.</p>
       <div class="social-links">
       
       </div>

@@ -70,7 +70,14 @@ export const systemRouter = createRouter({
           path: 'comments/:id',
           component: () => import('./views/comments/CommentDetail.vue'),
           meta: { title: '留言详情', requiresAuth: true }
-        }
+        },
+        {
+          path: 'categories',
+          name: 'CategoryManager',
+          component: () => import('./views/categories/CategoryTagManager.vue'),
+          meta: { title: '分类与标签管理' },
+        },
+        
       ]
     }
   ]

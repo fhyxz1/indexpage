@@ -22,11 +22,12 @@
         v-for="message in filteredMessages" 
         :key="message.id"
         :class="['message-item', { unread: !message.isRead }]"
+        @click="toggleReadStatus(message)"
       >
         <div class="message-content">
           <h3 class="message-title">{{ message.title }}</h3>
           <p class="message-text">{{ message.content }}</p>
-          <span class="message-time">{{ message.time }}</span>
+          <span class="message-time">{{ message.createAt }}</span>
         </div>
       </div>
     </div>
@@ -34,6 +35,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'MessageCenter',
   data() {
@@ -44,40 +47,53 @@ export default {
         { key: 'unread', name: '未读' },
         { key: 'read', name: '已读' }
       ],
-      messages: [
-        {
-          id: 1,
-          title: '系统通知',
-          content: '您的账号已经成功激活',
-          time: '2024-03-20 10:30',
-          isRead: false
-        },
-        // 更多消息数据...
-      ]
-    }
+      messages: [], // 初始为空，通过API获取消息
+    };
   },
   computed: {
     filteredMessages() {
       if (this.currentTab === 'unread') {
-        return this.messages.filter(msg => !msg.isRead)
+        return this.messages.filter(msg => !msg.isRead);
       } else if (this.currentTab === 'read') {
-        return this.messages.filter(msg => msg.isRead)
+        return this.messages.filter(msg => msg.isRead);
       }
-      return this.messages
+      return this.messages;
     },
     unreadCount() {
-      return this.messages.filter(msg => !msg.isRead).length
+      return this.messages.filter(msg => !msg.isRead).length;
     }
   },
   methods: {
     switchTab(tab) {
-      this.currentTab = tab
+      this.currentTab = tab;
+    },
+    fetchMessages() {
+      axios.get('http://localhost:8080/api/announcements/userlist') // 请根据实际的后端接口调整
+        .then(response => {
+          // 假设返回的数据格式包含 id, title, createAt
+          this.messages = response.data.map(msg => ({
+            ...msg,
+            isRead: false, // 假设所有消息默认是未读
+            content: msg.content || '', // 如果API返回了content字段，添加它
+          }));
+        })
+        .catch(error => {
+          console.error("获取消息时出错:", error);
+        });
+    },
+    toggleReadStatus(message) {
+      // 切换消息的阅读状态
+      message.isRead = !message.isRead;
     }
+  },
+  created() {
+    this.fetchMessages();
   }
-}
+};
 </script>
 
 <style scoped>
+/* 保持原有样式不变 */
 .message-center {
   padding: 20px;
   max-width: 800px;

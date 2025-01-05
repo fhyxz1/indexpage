@@ -43,8 +43,11 @@
 <script setup>
 import FloatingButton from '../module/button.vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus';
 import { ref, onMounted } from 'vue'
-
+ import { useRoute } from 'vue-router';
+ const router = useRoute();
+ const articleId = router.params.id // 文章 ID
 const articleHtml = ref('') // 用于存储文章 HTML 内容
 const posttitle = ref('') // 文章标题
 // 从后端获取文章 HTML
@@ -60,16 +63,16 @@ const fetchArticle = async (id) => {
 
 // 页面加载时获取文章
 onMounted(() => {
-  fetchArticle(1) // 示例文章 ID 为 1
+  fetchArticle(articleId) // 示例文章 ID 为 1
 })
 
 // 悬浮按钮点击事件
 function handleLike() {
-  console.log('点赞')
+  ElMessage.success('点赞成功,但是功能没做')
 }
 
 function handleComment() {
-  console.log('评论')
+  ElMessage.success('点击评论成功,但是功能没做')
 }
 
 function handleBackToTop() {

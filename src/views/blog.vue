@@ -30,7 +30,7 @@ interface Category {
 }
 
 interface Article {
-  id: number;
+  postId: number;
   imgUrl: string;
   title: string;
   summary: string; 
