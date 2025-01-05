@@ -204,7 +204,7 @@ import {
   };
   const navItems = [
     { path: '/home', label: '首页' },
-    { path: '/q', label: '学习导航' },
+    { path: '/studyindex', label: '学习导航' },
     { path: '/blog', label: '博客文章' },
   ];
 

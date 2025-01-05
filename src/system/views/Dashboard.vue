@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard">
-    <!-- 统计卡片 -->
+    <!-- Statistics Card -->
     <el-row :gutter="20">
       <el-col :span="6" v-for="(item, index) in statistics" :key="index">
         <el-card shadow="hover" :body-style="{ padding: '20px' }">
@@ -17,24 +17,21 @@
       </el-col>
     </el-row>
 
-    <!-- 图表区域 -->
+    <!-- Chart Area -->
     <el-row :gutter="20" class="chart-row">
       <el-col :span="16">
         <el-card shadow="hover">
           <template #header>
             <div class="chart-header">
               <span>博客发布趋势</span>
-              <el-radio-group v-model="timeRange" size="small">
+              <el-radio-group v-model="timeRange" size="small" @change="updateChart">
                 <el-radio-button label="week">本周</el-radio-button>
                 <el-radio-button label="month">本月</el-radio-button>
                 <el-radio-button label="year">全年</el-radio-button>
               </el-radio-group>
             </div>
           </template>
-          <div class="chart-container">
-            <!-- 这里可以集成 ECharts 等图表库 -->
-            <el-empty description="暂无数据" v-if="false"></el-empty>
-          </div>
+          <div class="chart-container" ref="chartContainer"></div>
         </el-card>
       </el-col>
 
@@ -63,7 +60,7 @@
       </el-col>
     </el-row>
 
-    <!-- 快捷操作区 -->
+    <!-- Quick Actions -->
     <el-card shadow="hover" class="quick-actions">
       <template #header>
         <div class="card-header">
@@ -87,8 +84,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import * as echarts from 'echarts'
 import {
   Document,
   Edit,
@@ -103,7 +101,7 @@ import {
 const router = useRouter()
 const timeRange = ref('week')
 
-// 统计数据
+// Statistics Data
 const statistics = [
   { label: '总博客数', value: '128', icon: 'Document', color: 'text-primary' },
   { label: '本月发布', value: '32', icon: 'Edit', color: 'text-success' },
@@ -111,7 +109,7 @@ const statistics = [
   { label: '活跃用户', value: '256', icon: 'User', color: 'text-danger' }
 ]
 
-// 最近活动
+// Recent Activities
 const recentActivities = [
   {
     content: '发布了新博客《Vue3 最佳实践》',
@@ -137,7 +135,7 @@ const recentActivities = [
   }
 ]
 
-// 快捷操作
+// Quick Actions
 const quickActions = [
   { label: '写博客', icon: 'Edit', path: '/system/blog/edit' },
   { label: '图片上传', icon: 'Picture', path: '/system/media' },
@@ -147,6 +145,46 @@ const quickActions = [
 
 const handleQuickAction = (action) => {
   router.push(action.path)
+}
+
+const chartContainer = ref(null)
+
+const chartData = {
+  week: [10, 20, 30, 40, 50, 60, 70],
+  month: [30, 50, 70, 90, 110, 130, 150],
+  year: [100, 200, 300, 400, 500, 600, 700]
+}
+
+let chartInstance = null
+
+// Initialize the chart when the component is mounted
+onMounted(() => {
+  chartInstance = echarts.init(chartContainer.value)
+  updateChart()  // Initial chart update
+})
+
+const updateChart = () => {
+  const data = chartData[timeRange.value]
+  const option = {
+    title: {
+      text: '博客发布趋势'
+    },
+    xAxis: {
+      type: 'category',
+      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        data,
+        type: 'line',
+        smooth: true
+      }
+    ]
+  }
+  chartInstance.setOption(option)
 }
 </script>
 

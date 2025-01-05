@@ -67,7 +67,7 @@ const routes = [
     ]
   },
   {
-    path: '/q',
+    path: '/studyindex',
     name: 'index',
     component: index,
     meta: { title: '首页' }

@@ -143,7 +143,7 @@
   // 基础导航菜单
   const menuItems = [
     { label: '首页', value: '/home', icon: 'home-o' },
-    { label: '学习导航', value: '/q', icon: 'guide-o' },
+    { label: '学习导航', value: '//studyindex', icon: 'guide-o' },
     { label: '博客文章', value: '/blog', icon: 'notes-o' },
   ];
 
